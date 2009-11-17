@@ -12,6 +12,7 @@ from django.template.context import Context
 from django.conf import settings
 from cms.utils.helpers import reversion_register
 
+
 class PluginModelBase(ModelBase):
     """
     Metaclass for all plugins.
