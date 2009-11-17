@@ -89,6 +89,10 @@ class CMSPlugin(MpttPublisher):
     
     def render_plugin(self, context=None, placeholder=None, admin=False):
         instance, plugin = self.get_plugin_instance()
+        
+        if not self.is_published():
+            return ''
+        
         if context is None:
             c = Context()
         else:
@@ -102,7 +106,19 @@ class CMSPlugin(MpttPublisher):
             return mark_safe(render_to_string(template, c))
         else:
             return ""
-            
+    
+    def is_published(self):
+        """
+        Checks if the plugin should be published, depending on the publication
+        start and/or end date (if available).
+        """
+        instance, plugin = self.get_plugin_instance()
+        if isinstance(instance, Schedulable):
+            return (instance.publication_date is None or instance.publication_date < datetime.now()) and \
+                (instance.publication_end_date is None or instance.publication_end_date >= datetime.now())
+        else:
+            return True
+    
     def get_media_path(self, filename):
         if self.page_id:
             return self.page.get_media_path(filename)
@@ -163,4 +179,21 @@ class CMSPlugin(MpttPublisher):
             public_copy.publisher_is_draft=False
             return public_copy
                 
+
+class Schedulable(models.Model):
+    """
+    Abstract model mixin for adding publication start and end date to a CMS
+    plugin.
+    
+    The plugin rendering logic checks if a CMS plugin instance is an instance
+    of this class. If so, its "published" state depends on the dates that have
+    been set.
+    """
+    publication_date = models.DateTimeField(_('publication date'), null=True, blank=True, help_text=_('When the plugin should go live.'), db_index=True)
+    publication_end_date = models.DateTimeField(_('publication end date'), null=True, blank=True, help_text=_('When to expire the plugin. Leave empty to never expire.'), db_index=True)
+    
+    class Meta:
+        abstract = True
+
+
 reversion_register(CMSPlugin)
