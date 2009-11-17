@@ -109,7 +109,7 @@ if settings.CMS_APPLICATIONS_URLS:
 
 def post_save_user(instance, raw, created, **kwargs):
     """Signal called when new user is created, required only when CMS_PERMISSION.
-    Asignes creator of the user to PageUserInfo model, so we now who had created 
+    Asignes creator of the user to PageUserInfo model, so we know who had created 
     this user account.
     
     requires: CurrentUserMiddleware
