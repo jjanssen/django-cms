@@ -92,11 +92,6 @@ class CMSPlugin(MpttPublisher):
         instance, plugin = self.get_plugin_instance()
         
         refdate = get_reference_date(context['request'])
-        
-        print '*' * 80
-        print 'Rendering plugin, refdate: %s' % refdate
-        print '*' * 80
-        
         if not self.is_published(refdate):
             return ''
         

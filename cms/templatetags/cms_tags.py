@@ -14,6 +14,7 @@ from cms.utils import get_language_from_request,\
     cut_levels, find_selected, mark_descendants
 from cms.utils import navigation
 from cms.utils.i18n import get_fallback_languages
+from cms.utils.timetravel import get_reference_date
 
 
 register = template.Library()
@@ -43,6 +44,7 @@ def show_menu(context, from_level=0, to_level=100, extra_inactive=0, extra_activ
     except KeyError:
         return {'template': 'cms/content.html'}
     page_queryset = get_page_queryset(request)
+    refdate = get_reference_date(request)
     site = Site.objects.get_current()
     lang = get_language_from_request(request)
     current_page = request.current_page
@@ -70,7 +72,7 @@ def show_menu(context, from_level=0, to_level=100, extra_inactive=0, extra_activ
             alist = current_page.get_ancestors().values_list('id', 'soft_root')
         if not alist:  # == None:# maybe the active node is in an extender?
             alist = []
-            extenders = page_queryset.published().filter(in_navigation=True, 
+            extenders = page_queryset.published(refdate=refdate).filter(in_navigation=True, 
                                                         site=site, 
                                                         level__lte=to_level)
             extenders = extenders.exclude(navigation_extenders__isnull=True).exclude( navigation_extenders__exact="")
@@ -122,7 +124,7 @@ def show_menu(context, from_level=0, to_level=100, extra_inactive=0, extra_activ
             filters['title_set__language'] = lang
         if not request.user.is_authenticated():
             filters['menu_login_required'] = False
-        pages = page_queryset.published().filter(**filters).order_by('tree_id', 
+        pages = page_queryset.published(refdate=refdate).filter(**filters).order_by('tree_id', 
                                                                     'parent', 
                                                                     'lft')
         pages = list(pages)
