@@ -11,6 +11,7 @@ from publisher import MpttPublisher
 from django.template.context import Context
 from django.conf import settings
 from cms.utils.helpers import reversion_register
+from cms.utils.timetravel import get_reference_date
 
 
 class PluginModelBase(ModelBase):
@@ -90,7 +91,13 @@ class CMSPlugin(MpttPublisher):
     def render_plugin(self, context=None, placeholder=None, admin=False):
         instance, plugin = self.get_plugin_instance()
         
-        if not self.is_published():
+        refdate = get_reference_date(context['request'])
+        
+        print '*' * 80
+        print 'Rendering plugin, refdate: %s' % refdate
+        print '*' * 80
+        
+        if not self.is_published(refdate):
             return ''
         
         if context is None:
@@ -107,15 +114,15 @@ class CMSPlugin(MpttPublisher):
         else:
             return ""
     
-    def is_published(self):
+    def is_published(self, refdate=datetime.now()):
         """
         Checks if the plugin should be published, depending on the publication
         start and/or end date (if available).
         """
         instance, plugin = self.get_plugin_instance()
         if isinstance(instance, Schedulable):
-            return (instance.publication_date is None or instance.publication_date < datetime.now()) and \
-                (instance.publication_end_date is None or instance.publication_end_date >= datetime.now())
+            return (instance.publication_date is None or instance.publication_date < refdate) and \
+                (instance.publication_end_date is None or instance.publication_end_date >= refdate)
         else:
             return True
     

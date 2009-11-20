@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.http import urlquote
 from django.conf import settings as django_settings
 from cms.utils.i18n import get_fallback_languages
+from cms.utils.timetravel import get_reference_date
 
 def get_current_page(path, lang, queryset, home_slug, home_tree_id):
     """Helper for getting current page from path depending on language
@@ -49,22 +50,11 @@ def details(request, page_id=None, slug=None, template_name=settings.CMS_TEMPLAT
     
     lang = get_language_from_request(request)
     site = Site.objects.get_current()
-    
-    # If a timetravel data has been set use it
-    if 'timetravel_date' in request.session:
-        reference_date = request.session['timetravel_date']
-        # print "Using time travel date: %s" % reference_date
         
-    # Otherwise, just use the current date
-    else:
-        from datetime import datetime
-        reference_date = datetime.now()
-        # print "Using now as refdate: %s" % reference_date
-    
     if 'preview' in request.GET.keys():
         pages = page_queryset.all()
     else:
-        pages = page_queryset.published(refdate=reference_date)
+        pages = page_queryset.published(refdate=get_reference_date(request))
     
     root_pages = pages.all_root().order_by("tree_id")
     current_page, response = None, None
