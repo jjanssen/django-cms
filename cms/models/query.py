@@ -89,9 +89,9 @@ class PageQuerySet(PublisherQuerySet):
         """
         return self.published().filter(title_set__application_urls__gt='').distinct()
     
-    def get_home(self, site=None):
+    def get_home(self, site=None, refdate=datetime.now()):
         try:
-            home = self.published(site).all_root().order_by("tree_id")[0]
+            home = self.published(site, refdate=refdate).all_root().order_by("tree_id")[0]
         except IndexError:
             raise  NoHomeFound('No Root page found. Publish at least one page!')
         return home

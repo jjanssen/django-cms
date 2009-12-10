@@ -45,6 +45,7 @@ def show_menu(context, from_level=0, to_level=100, extra_inactive=0, extra_activ
         return {'template': 'cms/content.html'}
     page_queryset = get_page_queryset(request)
     refdate = get_reference_date(request)
+    page_queryset = page_queryset.published(refdate=refdate)
     site = Site.objects.get_current()
     lang = get_language_from_request(request)
     current_page = request.current_page
@@ -60,11 +61,10 @@ def show_menu(context, from_level=0, to_level=100, extra_inactive=0, extra_activ
         home_pk = current_page.home_pk_cache
     else:
         try:
-            home_pk = page_queryset.get_home(site).pk
+            home_pk = page_queryset.get_home(site, refdate=refdate).pk
         except NoHomeFound:
             home_pk = 0
     if not next_page: #new menu... get all the data so we can save a lot of queries
-        
         children = []
         ancestors = []
         alist = None
@@ -72,7 +72,7 @@ def show_menu(context, from_level=0, to_level=100, extra_inactive=0, extra_activ
             alist = current_page.get_ancestors().values_list('id', 'soft_root')
         if not alist:  # == None:# maybe the active node is in an extender?
             alist = []
-            extenders = page_queryset.published(refdate=refdate).filter(in_navigation=True, 
+            extenders = page_queryset.filter(in_navigation=True, 
                                                         site=site, 
                                                         level__lte=to_level)
             extenders = extenders.exclude(navigation_extenders__isnull=True).exclude( navigation_extenders__exact="")
