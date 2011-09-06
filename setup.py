@@ -9,7 +9,7 @@ for dirpath, dirnames, filenames in os.walk('cms/media'):
 setup(
     author="Patrick Lauber",
     author_email="digi@treepy.com",
-    name='django-cms',
+    name='django-cms-timetravel',
     version=cms.__version__,
     description='An Advanced Django CMS',
     long_description=open(os.path.join(os.path.dirname(__file__), 'README.md')).read(),
