@@ -1,5 +1,6 @@
 import re
 from django.conf import settings
+from django.db.models import Q
 
 APPEND_TO_SLUG = "-copy"
 copy_slug_re = re.compile(r'^.*-copy(?:-(\d)*)?$')
@@ -21,6 +22,90 @@ def is_valid_page_slug(page, parent, lang, slug, site):
 
     if page.pk:
         qs = qs.exclude(language=lang, page=page)
+        
+    
+    # Only pages which are published in that time period, are counted as overlapping
+    #
+    # O: Other page (in database)
+    # N: New page (or page which is changed)
+    # ?S: Start datetime
+    # ?E: End datetime
+    #
+    # We only have to filter if the new/changed page is not always published:
+    if not (page.publication_date is None and page.publication_end_date is None):
+        # Case: (Other page always published)
+        #
+        # ------------O--------------
+        #
+        # OS and OE is None
+        qobject = (Q(page__publication_date__isnull=True) & Q(page__publication_end_date__isnull=True))
+        
+        def oe_none(qobject):
+            # Case:
+            # 
+            # OS-------
+            # ??-----NE
+            #
+            # OS is before NE, when OE is None
+            return qobject | (Q(page__publication_date__lt=page.publication_end_date) & Q(page__publication_end_date__isnull=True))
+    
+        def os_none(qobject):
+            # Case:
+            # 
+            # --------OE
+            # NS---------
+            #
+            # OE is after NS, when OS is None
+            return qobject | (Q(page__publication_end_date__gt=page.publication_date) & Q(page__publication_date__isnull=True))
+        
+        if page.publication_date is None:
+            # Case:
+            #
+            # OS---??
+            # -------NE
+            #
+            # OS is before NE, when NS is None
+            qobject |= Q(page__publication_date__lt=page.publication_end_date)
+            
+            qobject = oe_none(qobject)
+        elif page.publication_end_date is None:
+            # Case:
+            #
+            # ??----OE
+            # NS-------
+            #
+            # OE is after NS, when NE is None
+            qobject |= Q(page__publication_end_date__gt=page.publication_date)
+            
+            qobject = os_none(qobject)
+        else:            
+            # Case:
+            #
+            #       OS-------OE
+            #    NS------NE 
+            #
+            # OS is after NS but before NE
+            qobject |= (Q(page__publication_date__gte=page.publication_date) & Q(page__publication_date__lt=page.publication_end_date))
+            # Case
+            #
+            #    OS-------OE
+            #        NS---------NE
+            #
+            # OE is before NE but after NS
+            qobject |= (Q(page__publication_end_date__lte=page.publication_end_date) & Q(page__publication_end_date__gt=page.publication_date))
+            # Case
+            #
+            #  OS----------OE
+            #     NS----NE
+            #
+            # OS is before NS and OE is after NE
+            qobject |= (Q(page__publication_date__lte=page.publication_date) & Q(page__publication_end_date__gte=page.publication_end_date))
+            
+            qobject = oe_none(qobject)
+            qobject = os_none(qobject)
+    
+        qs = qs.filter(qobject)
+
     if qs.count():
         return False
     return True

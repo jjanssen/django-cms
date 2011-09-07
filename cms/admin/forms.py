@@ -20,6 +20,8 @@ from django.forms.widgets import HiddenInput
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 
+import copy
+
 
 class PageAddForm(forms.ModelForm):
     title = forms.CharField(label=_("Title"), widget=forms.TextInput(),
@@ -51,12 +53,16 @@ class PageAddForm(forms.ModelForm):
             slug = cleaned_data['slug']
         else:
             slug = ""
-        page = self.instance
         lang = cleaned_data['language']
         if 'parent' not in cleaned_data:
             cleaned_data['parent'] = None
         parent = cleaned_data.get('parent', None)
         site = self.cleaned_data.get('site', Site.objects.get_current())
+        
+        # Prepare a page object for check
+        page = copy.copy(self.instance)
+        for attr in ('publication_date', 'publication_end_date'):
+            setattr(page, attr, cleaned_data[attr])
         if not is_valid_page_slug(page, parent, lang, slug, site):
             self._errors['slug'] = ErrorList([ugettext_lazy('Another page with this slug already exists')])
             del cleaned_data['slug']

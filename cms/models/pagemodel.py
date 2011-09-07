@@ -262,11 +262,7 @@ class Page(MpttPublisher):
             
             if force_state is not None:
                 self.moderator_state = force_state
-            
-        
-        if self.publication_date is None and self.published:
-            self.publication_date = datetime.now()
-        
+
         if self.reverse_id == "":
             self.reverse_id = None
         
