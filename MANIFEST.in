@@ -2,10 +2,12 @@ include AUTHORS
 include LICENSE
 include README.md
 recursive-include cms/templates *
+recursive-include cms/locale *
 recursive-include cms/media *
 recursive-include cms/docs *.html *.css *.js *.png
 recursive-include cms/plugins/*/templates *
 recursive-include example/templates *
 recursive-include cms/fixtures *.json
 recursive-include mptt/tests/fixtures *.json
+recursive-exclude * *.pyc
 
