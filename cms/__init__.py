@@ -1,7 +1,7 @@
-VERSION = (2, 0, 0, 'timetravel', 1, 1, 1)
+VERSION = (2, 0, 0, 'timetravel', 1, 1, 2)
 __version__ = '.'.join(map(str, VERSION))
 
-# patch settings 
+# patch settings
 try:
     from conf import patch_settings
     from django.conf import settings
@@ -13,4 +13,3 @@ except ImportError:
     irrelevant.
     """
     pass
-
