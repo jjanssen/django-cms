@@ -211,6 +211,7 @@ def show_sub_menu(context, levels=100, template="cms/sub_menu.html"):
     render a nested list of all root's children pages"""
     request = context['request']
     page_queryset = get_page_queryset(request)
+    refdate = get_reference_date(request)
     
     lang = get_language_from_request(request)
     site = Site.objects.get_current()
@@ -241,7 +242,7 @@ def show_sub_menu(context, levels=100, template="cms/sub_menu.html"):
             filters['title_set__language'] = lang
         if not request.user.is_authenticated():
             filters['menu_login_required'] = False
-        pages = page_queryset.published().filter(**filters)
+        pages = page_queryset.published(refdate=refdate).filter(**filters)
        
         ids = []
         pages = list(pages)
@@ -272,7 +273,7 @@ def show_sub_menu(context, levels=100, template="cms/sub_menu.html"):
         to_level = page.level+levels
         extra_active = extra_inactive = levels
     else:
-        extenders = page_queryset.published().filter(in_navigation=True, site=site)
+        extenders = page_queryset.published(refdate=refdate).filter(in_navigation=True, site=site)
         extenders = extenders.exclude(navigation_extenders__isnull=True).exclude(navigation_extenders__exact="")
         children = []
         from_level = 0
